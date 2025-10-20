@@ -65,70 +65,54 @@
       `,
     };
 
-    const content = document.getElementById('content');
-    const navLinks = [...document.querySelectorAll('nav a')];
+  const content = document.getElementById('content');
+  const navLinks = [...document.querySelectorAll('nav a')];
 
-    function setActive(by) {
-      navLinks.forEach(a => a.setAttribute('aria-current', a === by ? 'page' : 'false'));
-    }
+  function setActive(by) {
+    navLinks.forEach(a => a.setAttribute('aria-current', a === by ? 'page' : 'false'));
+  }
 
-    function renderInternal(key) {
-      const html = sections[key] || sections.home;
-      content.innerHTML = html;
-      content.focus({preventScroll:true});
-    }
+  async function renderExternal(url) {
+    try {
+      // Use relative URLs so it works on GitHub Pages project paths.
+      const res = await fetch(url, { cache: 'no-cache' });
+      let html = await res.text();
 
-    async function renderExternal(url) {
-      try {
-        const res = await fetch(url, { cache: 'no-cache' });
-        const html = await res.text();
-        content.innerHTML = html;  // test.html is only inner markup
-        content.focus({preventScroll:true});
-      } catch (e) {
-        content.innerHTML = `<div class="card"><p>Could not load <code>${url}</code>.</p></div>`;
+      // If someone accidentally made test.html a full document, extract the <body>.
+      if (/<html[^>]*>/i.test(html)) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        html = (doc.querySelector('main')?.innerHTML) || doc.body.innerHTML || 'Loaded.';
       }
-    }
 
-    // Clicks (no page reload)
-    navLinks.forEach(a => a.addEventListener('click', e => {
+      content.innerHTML = html;              // inject ONLY inner markup
+      content.focus({ preventScroll: true }); // keep accessibility nice
+    } catch (e) {
+      content.innerHTML = `<div class="card"><p>Could not load <code>${url}</code>.</p></div>`;
+    }
+  }
+
+  // Clicks (no page reload)
+  navLinks.forEach(a => a.addEventListener('click', e => {
+    const external = a.dataset.external;
+    if (external) {
       e.preventDefault();
-      const internal = a.dataset.section;
-      const external = a.dataset.external;
-      if (internal) {
-        history.replaceState(null, '', `#${internal}`);
-        renderInternal(internal);
-      } else if (external) {
-        history.replaceState(null, '', `#${a.textContent.trim().toLowerCase().replace(/\\s+/g,'-')}`);
-        renderExternal(external);
-      }
+      history.replaceState(null, '', '#test');
+      renderExternal(external);
       setActive(a);
-    }));
-
-    // Hash load (supports refresh/back)
-    function loadFromHash() {
-      const hash = (location.hash || '#home').slice(1);
-      // internal?
-      if (sections[hash]) {
-        const link = navLinks.find(a => a.dataset.section === hash);
-        setActive(link || null);
-        renderInternal(hash);
-        return;
-      }
-      // external test
-      if (hash === 'test' || hash === 'test-page') {
-        const link = navLinks.find(a => a.dataset.external);
-        setActive(link || null);
-        renderExternal(link.dataset.external);
-        return;
-      }
-      // default
-      setActive(navLinks[0] || null);
-      renderInternal('home');
     }
+  }));
 
-    window.addEventListener('hashchange', loadFromHash);
-    document.getElementById('year').textContent = new Date().getFullYear();
-    loadFromHash();
+  // Hash support on refresh/back
+  function loadFromHash() {
+    const hash = (location.hash || '#home').slice(1);
+    if (hash === 'test') {
+      const link = navLinks.find(a => a.dataset.external);
+      if (link) { setActive(link); renderExternal(link.dataset.external); return; }
+    }
+    // ...your existing internal section handling here...
+  }
+  window.addEventListener('hashchange', loadFromHash);
+  loadFromHash();
   </script>
 </body>
 </html>
