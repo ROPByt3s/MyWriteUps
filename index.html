@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Test</title>
+  <title>Professional Two-Pane Site</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -16,25 +16,22 @@
         <li><a href="#services" data-section="services">Services <small>What we do</small></a></li>
         <li><a href="#portfolio" data-section="portfolio">Portfolio <small>Recent work</small></a></li>
         <li><a href="#contact" data-section="contact">Contact <small>Get in touch</small></a></li>
-        <!-- External page example -->
-        <li><a href="#test" data-external="/pages/test.html">Test Page <small>separate file</small></a></li>
+        <!-- IMPORTANT: relative path (no leading slash) -->
+        <li><a href="#test" data-external="pages/test.html">Test Page <small>separate file</small></a></li>
       </ul>
-
-      <div class="footer">
-        © <span id="year"></span> Your Company
-      </div>
+      <div class="footer">© <span id="year"></span> Your Company</div>
     </nav>
 
     <main id="content" tabindex="-1" aria-live="polite" aria-atomic="true"></main>
   </div>
 
   <script>
-    // --- Simple router ---
+    // --- Content for internal sections ---
     const sections = {
       home: `
         <h1 class="heading">Welcome</h1>
         <p class="sub">A clean, eye-friendly layout with a compact sidebar on the left and your content on the right.</p>
-        <div class="card"><p>Use the links on the left to switch sections. This setup keeps the code simple and the look professional.</p></div>
+        <div class="card"><p>Use the links on the left to switch sections. This setup keeps the code simple and professional.</p></div>
       `,
       about: `
         <h1 class="heading">About Us</h1>
@@ -44,14 +41,12 @@
       services: `
         <h1 class="heading">Services</h1>
         <p class="sub">What we can do for you.</p>
-        <div class="card">
-          <ul>
-            <li>Consulting & Strategy</li>
-            <li>Design & Prototyping</li>
-            <li>Web & App Development</li>
-            <li>Support & Maintenance</li>
-          </ul>
-        </div>
+        <div class="card"><ul>
+          <li>Consulting & Strategy</li>
+          <li>Design & Prototyping</li>
+          <li>Web & App Development</li>
+          <li>Support & Maintenance</li>
+        </ul></div>
       `,
       portfolio: `
         <h1 class="heading">Portfolio</h1>
@@ -65,55 +60,69 @@
       `,
     };
 
-  const content = document.getElementById('content');
-  const navLinks = [...document.querySelectorAll('nav a')];
+    const content = document.getElementById('content');
+    const navLinks = [...document.querySelectorAll('nav a')];
 
-  function setActive(by) {
-    navLinks.forEach(a => a.setAttribute('aria-current', a === by ? 'page' : 'false'));
-  }
+    function setActive(link) {
+      navLinks.forEach(a => a.setAttribute('aria-current', a === link ? 'page' : 'false'));
+    }
 
-  async function renderExternal(url) {
-    try {
-      // Use relative URLs so it works on GitHub Pages project paths.
-      const res = await fetch(url, { cache: 'no-cache' });
-      let html = await res.text();
+    function renderInternal(key) {
+      content.innerHTML = sections[key] || sections.home;
+      content.focus({ preventScroll: true });
+    }
 
-      // If someone accidentally made test.html a full document, extract the <body>.
-      if (/<html[^>]*>/i.test(html)) {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        html = (doc.querySelector('main')?.innerHTML) || doc.body.innerHTML || 'Loaded.';
+    async function renderExternal(url) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        let html = await res.text();
+
+        // If test.html is a full document, extract body/main so styles remain uniform.
+        if (/<html[^>]*>/i.test(html)) {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          html = (doc.querySelector('main')?.innerHTML) || doc.body.innerHTML || html;
+        }
+
+        content.innerHTML = html;
+        content.focus({ preventScroll: true });
+      } catch (e) {
+        content.innerHTML = `<div class="card"><p>Could not load <code>${url}</code>.</p></div>`;
       }
-
-      content.innerHTML = html;              // inject ONLY inner markup
-      content.focus({ preventScroll: true }); // keep accessibility nice
-    } catch (e) {
-      content.innerHTML = `<div class="card"><p>Could not load <code>${url}</code>.</p></div>`;
     }
-  }
 
-  // Clicks (no page reload)
-  navLinks.forEach(a => a.addEventListener('click', e => {
-    const external = a.dataset.external;
-    if (external) {
-      e.preventDefault();
-      history.replaceState(null, '', '#test');
-      renderExternal(external);
-      setActive(a);
-    }
-  }));
+    // Clicks (no page reload)
+    navLinks.forEach(a => a.addEventListener('click', e => {
+      const internal = a.dataset.section;
+      const external = a.dataset.external;
+      if (internal || external) e.preventDefault();
+      if (internal) {
+        history.replaceState(null, '', `#${internal}`);
+        renderInternal(internal); setActive(a);
+      } else if (external) {
+        history.replaceState(null, '', '#test');
+        renderExternal(external); setActive(a);
+      }
+    }));
 
-  // Hash support on refresh/back
-  function loadFromHash() {
-    const hash = (location.hash || '#home').slice(1);
-    if (hash === 'test') {
-      const link = navLinks.find(a => a.dataset.external);
-      if (link) { setActive(link); renderExternal(link.dataset.external); return; }
+    // Hash support (refresh/back)
+    function loadFromHash() {
+      const hash = (location.hash || '#home').slice(1);
+      if (sections[hash]) {
+        const link = navLinks.find(a => a.dataset.section === hash);
+        setActive(link || null); renderInternal(hash); return;
+      }
+      if (hash === 'test') {
+        const link = navLinks.find(a => a.dataset.external);
+        if (link) { setActive(link); renderExternal(link.dataset.external); return; }
+      }
+      // default
+      const first = navLinks.find(a => a.dataset.section === 'home');
+      setActive(first || null); renderInternal('home');
     }
-    // ...your existing internal section handling here...
-  }
-  window.addEventListener('hashchange', loadFromHash);
-  loadFromHash();
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    window.addEventListener('hashchange', loadFromHash);
+    loadFromHash();
   </script>
 </body>
 </html>
-
